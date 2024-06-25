@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/user_detail_nav"
+    app:startDestination="@id/studentDetailFragment">
+
+    <fragment
+        android:id="@+id/studentDetailFragment"
+        android:name="com.example.jobapp_u.user_detail.fragments.StudentDetailFragment"
+        android:label="fragment_student_detail"
+        tools:layout="@layout/fragment_student_detail" >
+        <action
+            android:id="@+id/action_studentDetailFragment_to_studentAddressFragment"
+            app:destination="@id/studentAddressFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/studentAddressFragment"
+        android:name="com.example.jobapp_u.user_detail.fragments.StudentAddressFragment"
+        android:label="fragment_student_address"
+        tools:layout="@layout/fragment_student_address" >
+        <action
+            android:id="@+id/action_studentAddressFragment_to_studentAcademicFragment"
+            app:destination="@id/studentAcademicFragment" />
+        <argument
+            android:name="student"
+            app:argType="com.example.jobapp_u.model.Student" />
+    </fragment>
+    <fragment
+        android:id="@+id/studentAcademicFragment"
+        android:name="com.example.jobapp_u.user_detail.fragments.StudentAcademicFragment"
+        android:label="fragment_student_academic"
+        tools:layout="@layout/fragment_student_academic" >
+        <argument
+            android:name="student"
+            app:argType="com.example.jobapp_u.model.Student" />
+        <action
+            android:id="@+id/action_studentAcademicFragment_to_studentResumeFragment"
+            app:destination="@id/studentResumeFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/studentResumeFragment"
+        android:name="com.example.jobapp_u.user_detail.fragments.StudentResumeFragment"
+        android:label="fragment_student_resume"
+        tools:layout="@layout/fragment_student_resume" >
+        <argument
+            android:name="student"
+            app:argType="com.example.jobapp_u.model.Student" />
+    </fragment>
+</navigation>
