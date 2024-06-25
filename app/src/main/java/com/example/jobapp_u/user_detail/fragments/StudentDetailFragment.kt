@@ -1,6 +1,5 @@
 package com.example.jobapp_u.user_detail.fragments
 
-
 import android.app.Activity
 import android.net.Uri
 import android.os.Build
@@ -22,12 +21,12 @@ import com.google.firebase.auth.FirebaseAuth
 import com.example.jobapp_u.R
 import com.example.jobapp_u.databinding.FragmentStudentDetailBinding
 import com.example.jobapp_u.model.Details
+import com.example.jobapp_u.model.Student
 import com.example.jobapp_u.user_detail.viewmodel.UserDetailViewModel
 import com.example.jobapp_u.util.InputValidation
 import com.example.jobapp_u.util.addTextWatcher
 import com.example.jobapp_u.util.getInputValue
 import com.example.jobapp_u.util.showToast
-import com.example.jobapp_u.model.Student
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -201,7 +200,7 @@ class StudentDetailFragment : Fragment() {
                 etDateContainer.apply {
                     error = dobError
                     setErrorIconOnClickListener {
-                      error = null
+                        error = null
                     }
                 }
                 return isDOBValid

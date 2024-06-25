@@ -12,9 +12,8 @@ import com.example.jobapp_u.databinding.FragmentStudentAddressBinding
 import com.example.jobapp_u.util.InputValidation
 import com.example.jobapp_u.util.addTextWatcher
 import com.example.jobapp_u.model.Address
-import com.example.jobapp_u.util.getInputValue
 import com.example.jobapp_u.model.Student
-
+import com.example.jobapp_u.util.getInputValue
 
 private const val TAG = "StudentAddressFragment"
 class StudentAddressFragment : Fragment() {
