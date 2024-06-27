@@ -1,60 +1,97 @@
 package com.example.jobapp_u.home.fragments
 
 import android.os.Bundle
+import android.text.Editable
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.jobapp_u.R
+import androidx.core.widget.addTextChangedListener
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.jobapp_u.databinding.FragmentJobsBinding
+import com.example.jobapp_u.home.adapter.JobListAdapter
+import com.example.jobapp_u.home.viewmodel.HomeViewModel
+import com.example.jobapp_u.model.Job
+import com.example.jobapp_u.util.Status
+import com.example.jobapp_u.util.showToast
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
 
-/**
- * A simple [Fragment] subclass.
- * Use the [JobsFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class JobsFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
+    private var _binding : FragmentJobsBinding? = null
+    private val binding get() = _binding!!
+    private var _jobListAdapter: JobListAdapter? = null
+    private val jobListAdapter get() = _jobListAdapter!!
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
+    private val homeViewModel by viewModels<HomeViewModel>()
+    private val jobs: MutableList<Job> by lazy { mutableListOf() }
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_jobs, container, false)
+        _binding = FragmentJobsBinding.inflate(inflater, container, false)
+        _jobListAdapter = JobListAdapter(::onItemClick, requireActivity())
+
+        setupUI()
+        setupObserver()
+
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment JobsFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            JobsFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    private fun setupUI() {
+        homeViewModel.fetchJobs()
+        binding.apply {
+
+            etSearch.addTextChangedListener { text: Editable? ->
+                filterJobs(text)
+            }
+            rvJobs.adapter = jobListAdapter
+            rvJobs.layoutManager = LinearLayoutManager(requireContext())
+        }
+    }
+
+    private fun setupObserver() {
+        homeViewModel.jobs.observe(viewLifecycleOwner){ jobStatus ->
+            when (jobStatus.status) {
+                Status.LOADING -> Unit
+                Status.SUCCESS -> {
+                    val jobList = jobStatus.data!!
+                    jobs.clear()
+                    jobs.addAll(jobList)
+                    jobListAdapter.setJobListData(jobList)
+                }
+                Status.ERROR -> {
+                    val errorMessage = jobStatus.message!!
+                    showToast(requireContext(), errorMessage)
                 }
             }
+        }
+    }
+
+    private fun filterJobs(text: Editable?) {
+        if (!text.isNullOrEmpty()) {
+            val filteredJobList = jobs.filter { job ->
+                val title = job.role.lowercase()
+                val inputText = text.toString().lowercase()
+                title.contains(inputText)
+            }
+            jobListAdapter.setJobListData(filteredJobList)
+        } else {
+            jobListAdapter.setJobListData(jobs)
+        }
+    }
+
+    private fun onItemClick(job: Job) {
+        val direction = JobsFragmentDirections.actionJobsFragmentToJobViewActivity(job = job)
+        findNavController().navigate(direction)
+    }
+
+    override fun onDestroyView() {
+        jobs.clear()
+        _jobListAdapter = null
+        _binding = null
+        super.onDestroyView()
     }
 }

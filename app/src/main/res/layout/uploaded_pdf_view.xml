@@ -54,7 +54,7 @@
                 android:ellipsize="end"
                 android:fontFamily="@font/dm_sans_regular"
                 android:textSize="12sp"
-                tools:text="867 Kb . 14 Feb 2022 at 11:30 am" />
+                tools:text="sasda" />
 
         </LinearLayout>
 

@@ -1,60 +1,241 @@
 package com.example.jobapp_u.home.fragments.userFragment
 
+import android.app.Activity
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.ActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import coil.load
+import com.github.dhaval2404.imagepicker.ImagePicker
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.example.jobapp_u.R
+import com.example.jobapp_u.auth.AuthActivity
+import com.example.jobapp_u.databinding.BottomSheetDeleteStudentBinding
+import com.example.jobapp_u.databinding.FragmentUserEditBinding
+import com.example.jobapp_u.home.viewmodel.UserEditViewModel
+import com.example.jobapp_u.util.*
+import com.example.jobapp_u.util.Status.*
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [UserEditFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class UserEditFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
+    private var _binding: FragmentUserEditBinding? = null
+    private val binding get() = _binding!!
+    private val args by navArgs<UserEditFragmentArgs>()
+    private val startForProfileImageResult =
+        registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result: ActivityResult ->
+            handleCapturedImage(result)
         }
-    }
-
+    private val userEditViewModel by viewModels<UserEditViewModel>()
+    private val loadingDialog: LoadingDialog by lazy { LoadingDialog(requireContext()) }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_user_edit, container, false)
+        _binding = FragmentUserEditBinding.inflate(inflater, container, false)
+
+        setupUI()
+        setupObserver()
+
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment UserEditFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            UserEditFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    private fun setupUI() {
+        binding.apply {
+            val studentDetails = args.student.details!!
+            profileImage.load(studentDetails.imageUrl)
+            etUsername.setText(studentDetails.username)
+            etEmail.setText(studentDetails.email)
+            etSapId.setText(studentDetails.sapId)
+            etMobile.setText(studentDetails.mobile)
+
+            ivPopOut.setOnClickListener {
+                findNavController().popBackStack()
+            }
+
+            if (userEditViewModel.getImageUri() != null) {
+                val imageUri = userEditViewModel.getImageUri()
+                profileImage.setImageURI(imageUri)
+            }
+
+            profileImage.setOnClickListener {
+                startCrop()
+            }
+
+            ivDeleteStudent.setOnClickListener {
+                deleteBottomSheet()
+            }
+
+            etUsernameContainer.addTextWatcher()
+            etEmailContainer.addTextWatcher()
+            etSapIdContainer.addTextWatcher()
+            etMobileContainer.addTextWatcher()
+
+            btnSaveChange.setOnClickListener {
+                btnSaveChange.isEnabled = false
+                val username = etUsername.getInputValue()
+                val email = etEmail.getInputValue()
+                val sapId = etSapId.getInputValue()
+                val mobile = etMobile.getInputValue()
+                val imageUrl = userEditViewModel.getImageUri() ?: Uri.parse(args.student.details?.imageUrl)
+
+                if (detailVerification(imageUrl, username, email, sapId, mobile)) {
+                    studentDetails.username = username
+                    studentDetails.email = email
+                    studentDetails.sapId = sapId
+                    studentDetails.mobile = mobile
+                    studentDetails.imageUrl = imageUrl.toString()
+                    args.student.details = studentDetails
+                    userEditViewModel.updateStudent(student = args.student)
+                }
+
+                btnSaveChange.isEnabled = true
+            }
+        }
+    }
+
+    private fun setupObserver() {
+        userEditViewModel.updateState.observe(viewLifecycleOwner) { updateState ->
+            when (updateState.status) {
+                LOADING -> {
+                    loadingDialog.show()
+                }
+                SUCCESS -> {
+                    val status = updateState.data!!
+                    showToast(requireContext(), status)
+                    loadingDialog.dismiss()
+                }
+                ERROR -> {
+                    val errorMessage = updateState.message!!
+                    showToast(requireContext(), errorMessage)
+                    loadingDialog.dismiss()
                 }
             }
+        }
+
+        userEditViewModel.deleteState.observe(viewLifecycleOwner) { deleteState ->
+            when (deleteState.status) {
+                LOADING -> {
+                    loadingDialog.show()
+                }
+                SUCCESS -> {
+                    loadingDialog.dismiss()
+                    val deleteStatus = deleteState.data!!
+                    showToast(requireContext(), deleteStatus)
+                    navigateToLogin()
+                }
+                ERROR -> {
+                    val errorMessage = deleteState.message!!
+                    showToast(requireContext(), errorMessage)
+                    loadingDialog.dismiss()
+                }
+            }
+        }
+    }
+
+    private fun navigateToLogin() {
+        requireActivity().finishAffinity()
+        val authActivity = Intent(requireContext(), AuthActivity::class.java)
+        authActivity.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP)
+        startActivity(authActivity)
+    }
+
+    private fun deleteBottomSheet() {
+        val bottomSheetDialog = BottomSheetDialog(requireContext())
+        val studentDeleteSheetBinding = BottomSheetDeleteStudentBinding.inflate(layoutInflater)
+        bottomSheetDialog.setContentView(studentDeleteSheetBinding.root)
+        studentDeleteSheetBinding.apply {
+            btnNo.setOnClickListener {
+                bottomSheetDialog.dismiss()
+            }
+            btnDeleteAccount.setOnClickListener {
+                bottomSheetDialog.dismiss()
+                userEditViewModel.deleteAccount(args.student)
+            }
+        }
+        bottomSheetDialog.show()
+    }
+
+    private fun startCrop() {
+        ImagePicker.with(this)
+            .galleryOnly()
+            .crop()
+            .compress(1024)
+            .maxResultSize(300, 300)
+            .createIntent { intent ->
+                startForProfileImageResult.launch(intent)
+            }
+    }
+
+    private fun handleCapturedImage(result: ActivityResult) {
+        val resultCode = result.resultCode
+        val data = result.data
+
+        when (resultCode) {
+            Activity.RESULT_OK -> {
+                userEditViewModel.setImageUri(imageUri = data?.data!!)
+                binding.profileImage.setImageURI(userEditViewModel.getImageUri())
+            }
+            ImagePicker.RESULT_ERROR -> {
+                Toast.makeText(requireContext(), ImagePicker.getError(data), Toast.LENGTH_SHORT)
+                    .show()
+            }
+            else -> {
+                showToast(requireContext(), "Task Cancelled")
+            }
+        }
+    }
+
+    private fun detailVerification(
+        imageUrl: Uri?,
+        username: String,
+        email: String,
+        sapId: String,
+        mobile: String
+    ): Boolean {
+        binding.apply {
+            if (imageUrl == null) {
+                showToast(requireContext(), getString(R.string.field_error_image))
+                return false
+            }
+
+            val (isUsernameValid, usernameError) = InputValidation.isUsernameValid(username)
+            if (isUsernameValid.not()) {
+                etUsernameContainer.error = usernameError
+                return isUsernameValid
+            }
+
+            val (isEmailValid, emailError) = InputValidation.isEmailValid(email)
+            if (isEmailValid.not()) {
+                etEmailContainer.error = emailError
+                return isEmailValid
+            }
+
+            val (isSapIdValid, sapIdError) = InputValidation.isSapIdValid(sapId)
+            if (isSapIdValid.not()) {
+                etSapIdContainer.error = sapIdError
+                return isSapIdValid
+            }
+
+            val (isMobileNumberValid, mobileNumberError) = InputValidation.isMobileNumberValid(mobile)
+            if (isMobileNumberValid.not()) {
+                etMobileContainer.error = mobileNumberError
+                return isMobileNumberValid
+            }
+
+            return true
+        }
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
     }
 }

@@ -1,60 +1,79 @@
 package com.example.jobapp_u.home.fragments.userFragment
 
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import com.example.jobapp_u.R
+import androidx.fragment.app.Fragment
+import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
+import com.example.jobapp_u.databinding.FragmentUserResumeEditBinding
+import com.example.jobapp_u.home.viewmodel.UserEditViewModel
+import com.example.jobapp_u.util.LoadingDialog
+import com.example.jobapp_u.util.Status.*
+import com.example.jobapp_u.util.showToast
 
-// TODO: Rename parameter arguments, choose names that match
-// the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-private const val ARG_PARAM1 = "param1"
-private const val ARG_PARAM2 = "param2"
-
-/**
- * A simple [Fragment] subclass.
- * Use the [UserResumeEditFragment.newInstance] factory method to
- * create an instance of this fragment.
- */
 class UserResumeEditFragment : Fragment() {
-    // TODO: Rename and change types of parameters
-    private var param1: String? = null
-    private var param2: String? = null
-
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }
-    }
-
+    private var _binding: FragmentUserResumeEditBinding? = null
+    private val binding get() = _binding!!
+    private val userEditViewModel by viewModels<UserEditViewModel>()
+    private val loadingDialog: LoadingDialog by lazy { LoadingDialog(requireContext()) }
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?,
         savedInstanceState: Bundle?
     ): View? {
-        // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_user_resume_edit, container, false)
+        _binding = FragmentUserResumeEditBinding.inflate(inflater, container, false)
+
+        setupUI()
+        setupObserver()
+
+        return binding.root
     }
 
-    companion object {
-        /**
-         * Use this factory method to create a new instance of
-         * this fragment using the provided parameters.
-         *
-         * @param param1 Parameter 1.
-         * @param param2 Parameter 2.
-         * @return A new instance of fragment UserResumeEditFragment.
-         */
-        // TODO: Rename and change types and number of parameters
-        @JvmStatic
-        fun newInstance(param1: String, param2: String) =
-            UserResumeEditFragment().apply {
-                arguments = Bundle().apply {
-                    putString(ARG_PARAM1, param1)
-                    putString(ARG_PARAM2, param2)
+    private fun setupUI() {
+        userEditViewModel.fetchResume()
+        binding.apply {
+            ivPopOut.setOnClickListener {
+                findNavController().popBackStack()
+            }
+            layoutUploadedPdf.llFileRemoveContainer.visibility = View.GONE
+        }
+    }
+
+    private fun setupObserver() {
+        userEditViewModel.resumeState.observe(viewLifecycleOwner) { resumeState ->
+            when (resumeState.status) {
+                LOADING -> {
+                    loadingDialog.show()
+                }
+                SUCCESS -> {
+                    val (fileName, fileMetaData, resumeUri) = resumeState.data!!
+                    binding.layoutUploadedPdf.tvFileName.text = fileName
+                    binding.layoutUploadedPdf.tvFileMetaData.text = fileMetaData
+                    binding.layoutUploadedPdf.root.setOnClickListener {
+                        setPdfIntent(resumeUri)
+                    }
+                    loadingDialog.dismiss()
+                }
+                ERROR -> {
+                    val errorMessage = resumeState.message!!
+                    showToast(requireContext(), errorMessage)
+                    loadingDialog.dismiss()
                 }
             }
+        }
+    }
+
+    private fun setPdfIntent(pdfUri: Uri) {
+        val pdfIntent = Intent(Intent.ACTION_VIEW)
+        pdfIntent.setDataAndType(pdfUri, "application/pdf")
+        startActivity(pdfIntent)
+    }
+
+    override fun onDestroyView() {
+        _binding = null
+        super.onDestroyView()
     }
 }
