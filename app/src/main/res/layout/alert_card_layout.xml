@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="@dimen/medium_margin"
+    android:layout_marginVertical="@dimen/small_margin"
+    app:cardBackgroundColor="@color/card_background"
+    app:cardCornerRadius="6dp">
+
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="@dimen/extra_small_padding">
+
+
+        <ImageView
+            android:id="@+id/ivNotification"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:layout_margin="@dimen/small_margin"
+            android:contentDescription="@null"
+            android:src="@drawable/ic_notification"
+            app:layout_constraintLeft_toLeftOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+        <TextView
+            android:id="@+id/tvNotificationTitle"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginHorizontal="@dimen/medium_margin"
+            android:layout_marginTop="@dimen/small_margin"
+            android:fontFamily="@font/dm_sans_bold"
+            android:textColor="@color/text_color"
+            android:textSize="16sp"
+            app:layout_constraintLeft_toRightOf="@+id/ivNotification"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            tools:text="New Job added !" />
+
+        <TextView
+            android:id="@+id/tvMessage"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/small_margin"
+            android:layout_marginEnd="@dimen/medium_margin"
+            android:fontFamily="@font/dm_sans_regular"
+            android:textColor="@color/text_color"
+            android:textSize="14sp"
+            app:layout_constraintLeft_toLeftOf="@+id/tvNotificationTitle"
+            app:layout_constraintRight_toRightOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/tvNotificationTitle"
+            tools:text="A new job has been made uploaded, and those who wish to apply may begin the application process." />
+
+
+        <TextView
+            android:id="@+id/tvTimestamp"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginVertical="@dimen/medium_margin"
+            android:alpha="0.5"
+            android:fontFamily="@font/dm_sans_regular"
+            android:textColor="@color/text_color"
+            android:textSize="12sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintLeft_toLeftOf="@+id/tvMessage"
+            app:layout_constraintTop_toBottomOf="@+id/tvMessage"
+            tools:text="25 minutes ago" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+</com.google.android.material.card.MaterialCardView>
