@@ -50,7 +50,7 @@ fun showToast(context: Context, message: String) {
 
 fun createSalaryText(salary: String, requireActivity: Activity): SpannableString {
     val shortSalary = convertToShortString(salary.toLong())
-    val salaryText = SpannableString("₹$shortSalary/year")
+    val salaryText = SpannableString("USD$shortSalary/year")
     val orangeColor = ContextCompat.getColor(requireActivity, R.color.on_boarding_span_text_color)
     val greyColor = ContextCompat.getColor(requireActivity, R.color.grey)
     val salaryColor = ForegroundColorSpan(orangeColor)
@@ -65,11 +65,13 @@ fun createSalaryText(salary: String, requireActivity: Activity): SpannableString
     return salaryText
 }
 
-
+//thực hien animation từ giá trị bắt đầu đến giá trị kết thúc
 fun counterAnimation(start: Int, end: Int, textView: TextView) {
     val animator = ValueAnimator.ofInt(start, end)
     animator.duration = 500
+    //làm cho animation chậm dần
     animator.interpolator = AccelerateDecelerateInterpolator()
+    //lắng nghe các sự kiện trong animation
     animator.addUpdateListener {
         val counter = it.animatedValue as Int
         textView.text = counter.toString()

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/home_nav"
+    app:startDestination="@id/homeFragment">
+
+    <fragment
+        android:id="@+id/homeFragment"
+        android:name="com.example.jobapp_u.home.fragments.HomeFragment"
+        android:label="fragment_home"
+        tools:layout="@layout/fragment_home">
+        <action
+            android:id="@+id/action_homeFragment_to_jobViewActivity"
+            app:destination="@id/jobViewActivity" />
+    </fragment>
+    <fragment
+        android:id="@+id/jobsFragment"
+        android:name="com.example.jobapp_u.home.fragments.JobsFragment"
+        android:label="fragment_jobs"
+        tools:layout="@layout/fragment_jobs">
+        <action
+            android:id="@+id/action_jobsFragment_to_jobViewActivity"
+            app:destination="@id/jobViewActivity" />
+    </fragment>
+    <activity
+        android:id="@+id/jobViewActivity"
+        android:name="com.example.jobapp_u.home.activity.JobViewActivity"
+        android:label="activity_job_view"
+        tools:layout="@layout/activity_job_view">
+        <argument
+            android:name="job"
+            app:argType="com.example.jobapp_u.model.Job" />
+    </activity>
+    <fragment
+        android:id="@+id/alertFragment"
+        android:name="com.example.jobapp_u.home.fragments.AlertFragment"
+        android:label="fragment_alert"
+        tools:layout="@layout/fragment_alert" />
+    <fragment
+        android:id="@+id/mockTestFragment"
+        android:name="com.example.jobapp_u.home.fragments.MockTestFragment"
+        android:label="fragment_mock_test"
+        tools:layout="@layout/fragment_mock_test" />
+</navigation>
